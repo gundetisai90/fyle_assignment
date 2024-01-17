@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Github Repos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .repo-block {
+            width: 48%;
+            margin: 1%;
+            float: left;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            height: 200px; /* Set a fixed height for all cards */
+            overflow: hidden; /* Hide overflowing content */
+        }
+
+        .repo-block h5 {
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+
+        .repo-block p {
+            color: #555;
+            margin-bottom: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Add ellipsis for long descriptions */
+            white-space: nowrap; /* Prevent text from wrapping */
+        }
+
+        .repo-block .languages {
+            margin-top: 10px;
+            padding: 5px;
+            background-color: #87CEEB; /* Sky blue background */
+            color: #fff; /* White text */
+            border-radius: 3px;
+            display: inline-block; /* Display as inline block */
+        }
+
+        .pagination {
+            margin-top: 20px;
+        }
+
+        #per-page {
+            width: 70px;
+            margin-right: 10px;
+        }
+
+        #update {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #loader {
+            display: none;
+            margin-top: 20px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div>
+        <label for="username">Enter Github Username:</label>
+        <input type="text" id="username" placeholder="Enter username">
+        <button id="search">Search</button>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                <li class="page-item"><a class="page-link" href="#" id="prev">Previous</a></li>
+                <li class="page-item"><a class="page-link" href="#" id="current-page"></a></li>
+                <li class="page-item"><a class="page-link" href="#" id="next">Next</a></li>
+            </ul>
+        </nav>
+        <input type="number" id="per-page" min="1" max="100" value="10">
+        <button id="update">Update</button>
+    </div>
+    <div id="repo-container"></div>
+    <!-- Loader -->
+    <div id="loader">
+        Loading...
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script type='text/javascript'>
+$(document).ready(function(){
+
+    let username = ''; // Initialize username
+
+    function fetchRepos(pageNumber) {
+        $('#loader').show();
+        $.ajax({
+            url: `https://api.github.com/users/${username}/repos?per_page=${perPage}&page=${pageNumber}`,
+            method: 'GET',
+            success: function(repos) {
+                $('#loader').hide();
+                let output = '';
+                repos.forEach(repo => {
+                    output += `<div class='card mb-3 repo-block'><div class='card-body'><h5>${repo.name}</h5><p>${repo.description}</p>`;
+                    
+                    // Display languages
+                    if (repo.language) {
+                        output += `<div class='languages' style='width: ${repo.language.length * 20}px;'>${repo.language}</div>`;
+                    }
+
+                    output += `</div></div>`;
+                });
+                $('#repo-container').html(output);
+                $('#current-page').text(`Page ${currentPage}`);
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+    }
+
+    // Handle click on 'search' button
+    $('#search').click(function() {
+        username = $('#username').val();
+        if (username) {
+            currentPage = 1;
+            fetchRepos(currentPage);
+        } else {
+            alert('Please enter a valid username.');
+        }
+    });
+
+    // Handle click on 'next' button
+    $('#next').click(function(e) {
+        e.preventDefault();
+        currentPage++;
+        fetchRepos(currentPage);
+    });
+
+    // Handle click on 'prev' button
+    $('#prev').click(function(e) {
+        e.preventDefault();
+        if (currentPage > 1) {
+            currentPage--;
+            fetchRepos(currentPage);
+        }
+    });
+
+    // Handle click on 'update' button
+    $('#update').click(function(e) {
+        e.preventDefault();
+        perPage = $('#per-page').val();
+        fetchRepos(currentPage);
+    });
+
+});
+</script>
+
+</body>
+</html>
